@@ -1,45 +1,36 @@
 from djongo import models
 
-class Team(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    class Meta:
-        db_table = 'teams'
-    def __str__(self):
-        return self.name
-
 class User(models.Model):
-    name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, related_name='members')
-    class Meta:
-        db_table = 'users'
+    name = models.CharField(max_length=100)
+    team = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
     def __str__(self):
         return self.email
 
+class Team(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    def __str__(self):
+        return self.name
+
 class Activity(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='activities')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     activity_type = models.CharField(max_length=100)
-    duration = models.PositiveIntegerField(help_text='Duration in minutes')
+    duration = models.IntegerField()  # in minutes
     date = models.DateField()
-    class Meta:
-        db_table = 'activities'
     def __str__(self):
         return f"{self.user.email} - {self.activity_type}"
+
+class Leaderboard(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    points = models.IntegerField(default=0)
+    def __str__(self):
+        return f"{self.team.name} - {self.points}"
 
 class Workout(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    suggested_for = models.ManyToManyField(User, blank=True, related_name='suggested_workouts')
-    class Meta:
-        db_table = 'workouts'
+    suggested_for = models.CharField(max_length=100)
     def __str__(self):
         return self.name
-
-class Leaderboard(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='leaderboard_entries')
-    score = models.PositiveIntegerField()
-    class Meta:
-        db_table = 'leaderboard'
-    def __str__(self):
-        return f"{self.user.email} - {self.score}"
